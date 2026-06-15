@@ -38,6 +38,10 @@ jobs:
           IG_USERNAME: ${{ vars.IG_USERNAME }}
           IG_DISPLAY: ${{ vars.IG_DISPLAY }}
           IG_SESSIONID: ${{ secrets.IG_SESSIONID }}
+          # Optional: override the ntfy topic/server from config.json via
+          # repo secrets/variables (keeps the topic out of the repo).
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ vars.NTFY_SERVER }}
         run: python -m tracker.update
 
       - name: Commit updated data
@@ -45,7 +49,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/history.json docs/widget.png docs/history.json
+          git add data/history.json data/notified.json docs/widget.png docs/history.json
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes to commit."

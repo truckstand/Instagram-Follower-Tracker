@@ -19,11 +19,13 @@ import sys
 from datetime import datetime, timezone
 
 from tracker.fetch import fetch_profile
+from tracker.notify import check_and_notify
 from tracker.render import render
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(ROOT, "config.json")
 HISTORY_PATH = os.path.join(ROOT, "data", "history.json")
+NOTIFIED_PATH = os.path.join(ROOT, "data", "notified.json")
 DOCS_DIR = os.path.join(ROOT, "docs")
 WIDGET_PATH = os.path.join(DOCS_DIR, "widget.png")
 DOCS_HISTORY_PATH = os.path.join(DOCS_DIR, "history.json")
@@ -96,6 +98,10 @@ def main() -> int:
         else:
             print(f"[update] no change ({profile.followers:,}); "
                   "skipping new history point.")
+
+        # Fire milestone notifications based on the freshly fetched count.
+        check_and_notify(config, profile.followers, NOTIFIED_PATH,
+                         display_name=display or profile.full_name)
 
     # Always (re)render so the widget reflects the latest run/time.
     render(history, WIDGET_PATH, display_name=display, stale=stale)

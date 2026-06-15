@@ -96,6 +96,31 @@ URL to your home screen instead.
 
 ---
 
+## Milestone notifications 🔔
+
+Get a push notification on your phone when she crosses a follower milestone
+(777, 1,000, 1,250, …). Delivered for free via [ntfy.sh](https://ntfy.sh).
+
+**On your Pixel 9:**
+1. Install the **ntfy** app (Play Store).
+2. Tap **+** → subscribe to the topic: **`roxann-followers-db715b8f`**
+   (server `https://ntfy.sh`). That's it — alerts arrive automatically.
+
+> The topic name acts as a password, so keep it private. To change it or hide
+> it from the repo, set it as a repo Secret `NTFY_TOPIC` (and optionally a
+> `NTFY_SERVER` variable for a self-hosted ntfy), which override `config.json`.
+
+**Which milestones** are configured in [`config.json`](config.json) under
+`notifications`:
+- `milestones`: explicit fun numbers (777, 888, 1111, …)
+- `auto_step` / `auto_until`: every 250 up to 10,000 by default
+
+Each milestone fires **once**. The first run silently records every milestone
+she's *already* past, so you won't get a flood of retroactive alerts — only
+new ones from here on.
+
+---
+
 ## Run / test locally
 
 ```bash
