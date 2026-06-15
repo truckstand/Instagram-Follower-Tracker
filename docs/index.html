@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Instagram Follower Tracker</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    background: linear-gradient(160deg, #833ab4, #fd5949 55%, #fcaf45);
+    color: #fff; display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .card {
+    width: 100%; max-width: 720px; background: rgba(0,0,0,0.28);
+    border-radius: 22px; padding: 28px 30px; backdrop-filter: blur(6px);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+  }
+  h1 { margin: 0 0 2px; font-size: 1.5rem; }
+  .user { opacity: .8; margin: 0 0 18px; }
+  .count { font-size: 4rem; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .label { opacity: .85; margin-top: 4px; }
+  .stats { display: flex; gap: 26px; margin: 18px 0 8px; flex-wrap: wrap; }
+  .stat b { font-size: 1.25rem; }
+  .stat span { display: block; opacity: .8; font-size: .8rem; }
+  .up { color: #b6ffba; } .down { color: #ffc2c2; }
+  canvas { margin-top: 12px; background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px; }
+  .foot { opacity: .7; font-size: .8rem; margin-top: 14px; }
+  .widget { margin-top: 18px; }
+  .widget img { width: 100%; max-width: 420px; border-radius: 14px; display: block; }
+  a { color: #fff; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="name">Loading…</h1>
+    <p class="user" id="user"></p>
+    <div class="count" id="count">—</div>
+    <div class="label">followers</div>
+
+    <div class="stats">
+      <div class="stat"><b id="d24">—</b><span>last 24h</span></div>
+      <div class="stat"><b id="d7">—</b><span>last 7 days</span></div>
+      <div class="stat"><b id="all">—</b><span>since start</span></div>
+    </div>
+
+    <canvas id="chart" height="160"></canvas>
+
+    <div class="widget">
+      <strong>Widget image:</strong>
+      <img src="widget.png" alt="follower widget" />
+    </div>
+
+    <p class="foot" id="foot"></p>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const fmt = n => n.toLocaleString();
+function signed(n){ return (n>0?"+":"") + fmt(n); }
+function deltaSince(hist, hours){
+  if(!hist.length) return null;
+  const cur = hist[hist.length-1].followers;
+  const cutoff = Date.now() - hours*3600*1000;
+  let base = hist[0].followers;
+  for(const e of hist){ if(new Date(e.timestamp).getTime() <= cutoff) base = e.followers; else break; }
+  return cur - base;
+}
+function setDelta(id, v){
+  const el = document.getElementById(id);
+  if(v===null){ el.textContent="—"; return; }
+  el.textContent = signed(v);
+  el.className = v>0 ? "up" : v<0 ? "down" : "";
+}
+
+async function load(){
+  let hist;
+  try { hist = await (await fetch("history.json?_=" + Date.now())).json(); }
+  catch(e){ document.getElementById("name").textContent = "No data yet"; return; }
+  if(!hist.length){ document.getElementById("name").textContent = "No data yet"; return; }
+
+  const last = hist[hist.length-1];
+  document.getElementById("name").textContent = last.full_name || last.username;
+  document.getElementById("user").textContent = "@" + (last.username||"");
+  document.getElementById("count").textContent = fmt(last.followers);
+  setDelta("d24", deltaSince(hist, 24));
+  setDelta("d7", deltaSince(hist, 24*7));
+  setDelta("all", last.followers - hist[0].followers);
+  document.getElementById("foot").textContent =
+    "Updated " + new Date(last.timestamp).toLocaleString();
+
+  new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+      labels: hist.map(e => new Date(e.timestamp).toLocaleDateString()),
+      datasets: [{
+        data: hist.map(e => e.followers),
+        borderColor: "#fff", backgroundColor: "rgba(255,255,255,.15)",
+        fill: true, tension: .3, pointRadius: 0, borderWidth: 2,
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: "rgba(255,255,255,.7)", maxTicksLimit: 6 }, grid: { display:false } },
+        y: { ticks: { color: "rgba(255,255,255,.7)" }, grid: { color: "rgba(255,255,255,.1)" } },
+      },
+    },
+  });
+}
+load();
+// refresh the widget image and data periodically while the page is open
+setInterval(() => {
+  document.querySelector(".widget img").src = "widget.png?_=" + Date.now();
+}, 5*60*1000);
+</script>
+</body>
+</html>

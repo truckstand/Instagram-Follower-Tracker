@@ -1,0 +1,72 @@
+name: Track Instagram followers
+
+on:
+  # NOTE: scheduled workflows only run on the repository's DEFAULT branch.
+  # Merge this into your default branch for the hourly schedule to fire.
+  schedule:
+    - cron: "0 * * * *"   # every hour, on the hour (UTC)
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+# Allow committing the updated history and publishing to GitHub Pages.
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Don't let overlapping runs fight over the commit / Pages deployment.
+concurrency:
+  group: follower-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update follower count and render widget
+        env:
+          IG_USERNAME: ${{ vars.IG_USERNAME }}
+          IG_DISPLAY: ${{ vars.IG_DISPLAY }}
+          IG_SESSIONID: ${{ secrets.IG_SESSIONID }}
+        run: python -m tracker.update
+
+      - name: Commit updated data
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/history.json docs/widget.png docs/history.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update follower count [skip ci]"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: track
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
