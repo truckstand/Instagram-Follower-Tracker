@@ -101,14 +101,22 @@ URL to your home screen instead.
 Get a push notification on your phone when she crosses a follower milestone
 (777, 1,000, 1,250, …). Delivered for free via [ntfy.sh](https://ntfy.sh).
 
+The ntfy topic name acts as a password — anyone who knows it can read your
+alerts or send fake ones — so in this **public** repo it is **not** committed.
+Store it as a private repo Secret instead:
+
+1. Pick a hard-to-guess topic, e.g. `roxann-followers-aa83b08b23359fad`.
+2. Repo → Settings → **Secrets and variables → Actions → Secrets** →
+   **New repository secret** → name `NTFY_TOPIC`, value = your topic.
+   (Optionally a `NTFY_SERVER` variable for a self-hosted ntfy.)
+
+The workflow passes `NTFY_TOPIC` in, which overrides the `CHANGE_ME` placeholder
+in `config.json`. If it's unset, milestone alerts are simply skipped.
+
 **On your Pixel 9:**
 1. Install the **ntfy** app (Play Store).
-2. Tap **+** → subscribe to the topic: **`roxann-followers-db715b8f`**
-   (server `https://ntfy.sh`). That's it — alerts arrive automatically.
-
-> The topic name acts as a password, so keep it private. To change it or hide
-> it from the repo, set it as a repo Secret `NTFY_TOPIC` (and optionally a
-> `NTFY_SERVER` variable for a self-hosted ntfy), which override `config.json`.
+2. Tap **+** → subscribe to that **same topic** (server `https://ntfy.sh`).
+   That's it — alerts arrive automatically.
 
 **Which milestones** are configured in [`config.json`](config.json) under
 `notifications`:

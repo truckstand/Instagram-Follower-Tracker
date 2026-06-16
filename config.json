@@ -3,7 +3,7 @@
   "display_name": "Roxann",
   "timezone": "UTC",
   "notifications": {
-    "ntfy_topic": "roxann-followers-db715b8f",
+    "ntfy_topic": "CHANGE_ME",
     "ntfy_server": "https://ntfy.sh",
     "milestones": [777, 888, 1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999],
     "auto_step": 250,
