@@ -120,8 +120,9 @@ in `config.json`. If it's unset, milestone alerts are simply skipped.
 
 **Which milestones** are configured in [`config.json`](config.json) under
 `notifications`:
-- `milestones`: explicit fun numbers (777, 888, 1111, …)
-- `auto_step` / `auto_until`: every 250 up to 10,000 by default
+- `milestones`: explicit fun numbers (777, 888, 1111, 1234, …)
+- `auto_tiers`: stepped ranges that are unioned together — currently every 100
+  up to 2,000, then every 250 up to 10,000
 
 Each milestone fires **once**. The first run silently records every milestone
 she's *already* past, so you won't get a flood of retroactive alerts — only

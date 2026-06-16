@@ -23,14 +23,26 @@ DEFAULT_SERVER = "https://ntfy.sh"
 
 
 def build_milestones(notif_cfg: dict) -> List[int]:
-    """Combine the explicit milestone list with an optional ``auto_step``."""
+    """Combine the explicit milestone list with one or more auto-step tiers.
+
+    Tiers are defined under ``auto_tiers`` as ``[{"step": N, "until": M}]`` and
+    are unioned together (so you can have finer steps early and coarser later).
+    The legacy single ``auto_step`` / ``auto_until`` pair is still honored.
+    """
     values = set(int(m) for m in notif_cfg.get("milestones", []))
-    step = notif_cfg.get("auto_step")
-    until = notif_cfg.get("auto_until")
-    if step and until:
-        step, until = int(step), int(until)
-        if step > 0:
-            values.update(range(step, until + 1, step))
+
+    tiers = list(notif_cfg.get("auto_tiers", []))
+    if notif_cfg.get("auto_step") and notif_cfg.get("auto_until"):
+        tiers.append({"step": notif_cfg["auto_step"],
+                      "until": notif_cfg["auto_until"]})
+
+    for tier in tiers:
+        step = int(tier.get("step", 0))
+        until = int(tier.get("until", 0))
+        start = int(tier.get("from", step))
+        if step > 0 and until > 0:
+            values.update(range(start, until + 1, step))
+
     return sorted(values)
 
 
